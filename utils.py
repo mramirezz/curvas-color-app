@@ -106,22 +106,22 @@ def leer_spec(path,ot=False,MJD=False,as_pandas=False,compress=False):
 def maximo_lc(tipo,sn,ubuntu=False):
     if tipo=='II':
         if ubuntu==True:
-            maximum_df=pd.read_csv("/mnt/g/Mi unidad/Work/OT_unidos_2/OT_combines_test/maximum_II.txt")
+            maximum_df=pd.read_csv("data/maximos/maximum_II.txt")
 
         else:
-            maximum_df=pd.read_csv("G:\Mi unidad\Work\OT_unidos_2\OT_combines_test\maximum_II.txt")
+            maximum_df=pd.read_csv("data/maximos/maximum_II.txt")
         max_=float(maximum_df.loc[maximum_df['name']==sn]['fase'])
         return max_
     if tipo=='Ia':
         if ubuntu==True:
              
-            df_max=pd.read_csv("/mnt/g/Mi unidad/Work/OT_unidos_2/OT_combines_test/maximum_Ia.txt")
+            df_max=pd.read_csv("data/maximos/maximum_Ia.txt")
         else:
-            df_max=pd.read_csv("G:\Mi unidad\Work\OT_unidos_2\OT_combines_test\maximum_Ia.txt")
+            df_max=pd.read_csv("data/maximos/maximum_Ia.txt")
         df_max[df_max.name==sn]
 
     if tipo=='Ibc' or tipo=='Ib' or tipo=='Ic':
-            df_max=pd.read_csv(r"G:\Mi unidad\Work\Universidad\Phd\Practica2\maximum_Ibc.dat")
+            df_max=pd.read_csv(r"data/maximos/maximum_Ibc.dat")
             #df_max=pd.read_csv( "G:\Mi unidad\Spectral Time Series - Ramirez M\Data\maximum_perband.dat")
             df_max[df_max.name==sn]
     
