@@ -7,7 +7,7 @@ from glob import glob
 from utils import data_curvas, maximo_lc
 
 # Rutas relativas
-path_pca = "data/pca"
+path_pca = "data/sintetica_mangleada"
 path_real = "data/real"
 
 # Orden físico de filtros conocidos en astronomía
