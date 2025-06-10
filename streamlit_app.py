@@ -10,7 +10,6 @@ from utils import data_curvas, maximo_lc
 FASE_MAX = 50
 
 # Rutas relativas
-path_pca = "data/sintetica_mangleada"
 path_real = "data/real"
 
 # Orden físico de filtros conocidos en astronomía
@@ -50,13 +49,33 @@ st.title("Curvas de Color - SN Tipo Ibc")
 st.markdown("""
 Esta aplicación permite visualizar curvas de color generadas a partir de curvas de luz reales y extendidas (por PCA) de supernovas tipo Ibc.
 
+**Tipos de datos disponibles:**
+- **Curvas PCA**: Curvas de color generadas a partir de fotometría extendida usando análisis de componentes principales (PCA)
+- **Curvas Sintéticas Mangleadas**: Curvas de color generadas a partir de fotometría sintética derivada de espectros
+
 - Selecciona un **color** (ej: B‒V, g‒r) en el desplegable para mostrar sus curvas.
 - Las **curvas reales** se muestran en gris (baja opacidad), ocultas por defecto.
 - Las **curvas reales dentro de una curva extendida** se muestran en azul.
 - Los **puntos extrapolados** (que sólo están en la curva PCA) se muestran en rojo con símbolo `x`.
 - Puedes activar o desactivar curvas específicas desde la **leyenda**.
+- Puedes seleccionar el tipo de datos a visualizar: **PCA** o **Sintéticas Mangleadas**.
+- Las curvas de color de las mangleadas sinteticas se muestran en rojo `x` al seleccionar el tipo de datos "Sintéticas Mangleadas".
 """)
 
+# Selector de tipo de datos
+tipo_datos = st.radio(
+    "Selecciona el tipo de datos:",
+    ["PCA", "Sintéticas Mangleadas"],
+    index=1
+)
+
+# Determinar la ruta según la selección
+if tipo_datos == "PCA":
+    path_pca = "data/pca"
+else:
+    path_pca = "data/sintetica_mangleada"
+
+# Reinicializar las listas para cada ejecución
 trazas = []
 colores_disponibles = set()
 
@@ -143,23 +162,26 @@ for archivo_pca in archivos_pca:
             visible=True
         ))
 
-# Interfaz de selección
-desplegable = st.selectbox("Selecciona un color a visualizar:", sorted(colores_disponibles))
+# Interfaz de selección de color
+if colores_disponibles:
+    desplegable = st.selectbox("Selecciona un color a visualizar:", sorted(colores_disponibles))
+    
+    # Mostrar gráfico
+    fig = go.Figure()
+    for trace in trazas:
+        if desplegable in trace.name:
+            fig.add_trace(trace)
 
-# Mostrar gráfico
-fig = go.Figure()
-for trace in trazas:
-    if desplegable in trace.name:
-        fig.add_trace(trace)
+    fig.update_layout(
+        title=f"Curvas de color: {desplegable}",
+        xaxis_title="Fase (días desde máximo)",
+        yaxis_title="Magnitud de color",
+        width=1200,
+        height=600,
+        template="plotly_white",
+        legend_title="Click para activar/desactivar curvas"
+    )
 
-fig.update_layout(
-    title=f"Curvas de color: {desplegable}",
-    xaxis_title="Fase (días desde máximo)",
-    yaxis_title="Magnitud de color",
-    width=1200,
-    height=600,
-    template="plotly_white",
-    legend_title="Click para activar/desactivar curvas"
-)
-
-st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
+else:
+    st.warning(f"No se encontraron datos de curvas de color.")
