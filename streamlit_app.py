@@ -6,6 +6,9 @@ import plotly.graph_objects as go
 from glob import glob
 from utils import data_curvas, maximo_lc
 
+# Constante para cortar en fase
+FASE_MAX = 50
+
 # Rutas relativas
 path_pca = "data/sintetica_mangleada"
 path_real = "data/real"
@@ -13,8 +16,6 @@ path_real = "data/real"
 # Orden físico de filtros conocidos en astronomía
 orden_filtros = ['U', 'B', 'V', 'R', 'I', 'g', 'r', 'i', 'z']
 orden_dict = {f: i for i, f in enumerate(orden_filtros)}
-
-# Funciones auxiliares
 
 def nombre_base(nombre_archivo):
     return os.path.basename(nombre_archivo).split('_')[0]
@@ -30,7 +31,7 @@ def calcular_curvas_color(FILTROS, filtros):
             if f1 not in orden_dict or f2 not in orden_dict:
                 continue
             if orden_dict[f1] >= orden_dict[f2]:
-                continue  # asegurar que el azul va primero
+                continue
             t1, m1 = FILTROS[i][0], FILTROS[i][1]
             t2, m2 = FILTROS[j][0], FILTROS[j][1]
             tiempos_comunes = np.intersect1d(t1, t2)
@@ -75,10 +76,11 @@ for archivo_real in archivos_real:
     curvas_real = calcular_curvas_color(FILTROS_real, filtros_real)
     for color_name in curvas_real:
         t_real, col_real = curvas_real[color_name]
+        mask = t_real <= FASE_MAX
         colores_disponibles.add(color_name)
         trazas.append(go.Scatter(
-            x=t_real,
-            y=col_real,
+            x=t_real[mask],
+            y=col_real[mask],
             mode='markers',
             marker=dict(color='gray', symbol='circle', opacity=0.5),
             name=f"{nombre_sn} {color_name} (real)",
@@ -95,7 +97,7 @@ for archivo_pca in archivos_pca:
     path_real_file = os.path.join(path_real, f"{nombre_sn}_photometry.dat")
     FILTROS_pca, filtros_pca = data_curvas(archivo_pca)
     try:
-        tmax = float(maximo_lc("Ibc", nombre_sn))
+        tmax = 0  # maximo_lc("Ibc", nombre_sn) si lo necesitas
         for k in range(len(FILTROS_pca)):
             FILTROS_pca[k][0] = FILTROS_pca[k][0] - tmax
     except:
@@ -117,9 +119,14 @@ for archivo_pca in archivos_pca:
         fases_pca = np.round(t_pca, 3)
         mask_real = np.array([fase in fases_reales for fase in fases_pca])
         mask_ext = ~mask_real
+
+        # Aplicar filtro de fase
+        mask_real_filtro = mask_real & (t_pca <= FASE_MAX)
+        mask_ext_filtro = mask_ext & (t_pca <= FASE_MAX)
+
         trazas.append(go.Scatter(
-            x=t_pca[mask_real],
-            y=col_pca[mask_real],
+            x=t_pca[mask_real_filtro],
+            y=col_pca[mask_real_filtro],
             mode='markers',
             marker=dict(color='blue', symbol='circle'),
             name=f"{nombre_sn} {color_name} (real en extendida)",
@@ -127,8 +134,8 @@ for archivo_pca in archivos_pca:
             visible=True
         ))
         trazas.append(go.Scatter(
-            x=t_pca[mask_ext],
-            y=col_pca[mask_ext],
+            x=t_pca[mask_ext_filtro],
+            y=col_pca[mask_ext_filtro],
             mode='markers',
             marker=dict(color='red', symbol='x'),
             name=f"{nombre_sn} {color_name} (extendida)",
